@@ -71,7 +71,6 @@ Full evidence and methodology: [`validation/`](validation/).
 Enterprise-SOC-Monitoring-Lab/
 ├── README.md
 ├── architecture/
-├── configs/
 ├── dashboards/
 ├── detection-rules/
 ├── incident-reports/
