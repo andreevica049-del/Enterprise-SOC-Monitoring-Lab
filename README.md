@@ -48,6 +48,24 @@ The **Enterprise SOC - Linux Security Monitoring** Classic XML dashboard include
 
 Dashboard source: [`dashboards/`](dashboards/). Screenshots: [`screenshots/`](screenshots/).
 
+## SOC Monitoring Screenshots
+
+### Splunk Security Dashboard
+
+The dashboard visualizes SSH authentication activity,
+failed login trends, source IP addresses, and sudo failures.
+
+![Splunk SOC Dashboard](screenshots/splunk_dashboard_overview.png)
+
+### Detection Alerts and Security Events
+
+The dashboard displays triggered SOC detection alerts,
+including the validated SSH brute-force alert, alongside
+recent Linux security events.
+
+![SOC Detection Alerts](screenshots/splunk_alerts_and_security_events.png)
+
+
 ## End-to-end validation — November 13, 2026
 
 A controlled SSH test verified the path from source logs to a triggered alert and dashboard display.
