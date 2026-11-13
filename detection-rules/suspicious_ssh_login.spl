@@ -1,0 +1,10 @@
+index=linux sourcetype=linux_secure ("Failed password" OR "Accepted password")
+| rex field=_raw "(?:Failed|Accepted) password for (?:invalid user )?(?<target_user>\S+) from (?<src_ip>\d{1,3}(?:\.\d{1,3}){3})"
+| eval login_status=if(match(_raw,"Failed password"),"failed","success")
+| sort 0 _time
+| eval failed_event=if(login_status="failed",1,0)
+| streamstats time_window=300s sum(failed_event) AS failed_attempts by host src_ip target_user
+| where login_status="success" AND failed_attempts>=5
+| where _time >= relative_time(now(), "-10m")
+| table _time host src_ip target_user failed_attempts login_status
+| sort -_time

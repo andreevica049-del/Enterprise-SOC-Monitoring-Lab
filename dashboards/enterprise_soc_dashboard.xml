@@ -1,0 +1,122 @@
+<dashboard version="1.1" theme="dark">
+  <label>Enterprise SOC - Linux Security Monitoring</label>
+  <description>SOC monitoring dashboard for Linux authentication, SSH threats, sudo activity, and security detection alerts.</description>
+  <row>
+    <panel>
+      <chart>
+        <title>SSH Authentication Overview</title>
+        <search>
+          <query>index=linux sourcetype=linux_secure
+("Failed password" OR "Accepted password")
+| eval status=if(match(_raw,"Failed password"),"Failed","Successful")
+| stats count by status</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Failed SSH Logins Over Time</title>
+        <search>
+          <query>index=linux sourcetype=linux_secure "Failed password"
+| timechart span=5m count AS failed_attempts</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Top SSH Source IP Addresses</title>
+        <search>
+          <query>index=linux sourcetype=linux_secure
+("Failed password" OR "Accepted password")
+| rex field=_raw "(?:Failed|Accepted) password for (?:invalid user )?\S+ from (?&lt;src_ip&gt;\d{1,3}(?:\.\d{1,3}){3})"
+| where isnotnull(src_ip)
+| stats count AS authentication_attempts by src_ip
+| sort - authentication_attempts
+| head 10</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">bar</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <chart>
+        <title>Sudo Authentication Failures</title>
+        <search>
+          <query>index=linux sourcetype=linux_secure
+"pam_unix(sudo:auth)" "authentication failure"
+| timechart span=5m count AS sudo_failures</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>SOC Detection Alerts</title>
+        <search>
+          <query>index=_audit action=alert_fired
+| rex field=_raw "ss_name=\"(?&lt;alert_name&gt;[^\"]+)\""
+| rex field=_raw "severity=(?&lt;severity_number&gt;\d+)"
+| where like(alert_name,"SOC%")
+| eval severity=case(
+    severity_number="5","Critical",
+    severity_number="4","High",
+    severity_number="3","Medium",
+    severity_number="2","Low",
+    true(),"Unknown"
+)
+| table _time alert_name severity user
+| sort 0 -_time</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Recent Security Events</title>
+        <search>
+          <query>index=linux sourcetype=linux_secure
+("Failed password" OR "Accepted password" OR "sudo:")
+| eval event_type=case(
+    match(_raw,"Failed password"),"SSH Login Failed",
+    match(_raw,"Accepted password"),"SSH Login Successful",
+    match(_raw,"authentication failure"),"Sudo Authentication Failed",
+    match(_raw,"COMMAND="),"Sudo Command",
+    true(),"Other Sudo Event"
+)
+| table _time host event_type _raw
+| sort 0 -_time
+| head 20</query>
+          <earliest>0</earliest>
+          <latest></latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+</dashboard>

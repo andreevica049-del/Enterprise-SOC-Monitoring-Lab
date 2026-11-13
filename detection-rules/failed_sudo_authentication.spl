@@ -1,0 +1,9 @@
+index=linux sourcetype=linux_secure
+"pam_unix(sudo:auth)" "authentication failure"
+| rex field=_raw "ruser=(?<sudo_user>\S+)"
+| where isnotnull(sudo_user)
+| sort 0 _time
+| streamstats time_window=300s count AS failed_sudo_attempts by host sudo_user
+| where failed_sudo_attempts>=2
+| table _time host sudo_user failed_sudo_attempts
+| sort -_time
