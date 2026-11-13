@@ -79,7 +79,7 @@ Enterprise-SOC-Monitoring-Lab/
 └── validation/
 ```
 
-Some folders are intentionally placeholders until the associated sanitized artifacts are added.
+
 
 ## Reproduction notes
 
